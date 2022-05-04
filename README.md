@@ -1,0 +1,2 @@
+I, Thomas Joseph Sereseroz III, have made these documents to be an example of the operation and maintenance of binary search trees.
+feel free to share these for educational purposes. If you wish to sell it... contact me - tomsereseroz@gmail.com
