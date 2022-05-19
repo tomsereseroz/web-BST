@@ -25,69 +25,52 @@ class Node{
 export default class BST{
     constructor(data=null){
         this.size = 0;
+        this.depth = 0;
         this.root = null;
         if(data==null)
             return this;
         check(data);
-        return this.init(data);
-    }
-    
-    init(data){//take out this. make user handle array inputs.
-        if(Array.isArray(data)){
-            this.size = data.length;
-            this.root = new Node(data[0]);
-            this.size = 1;
-            data.shift();
-            if(data.length > 0)
-                this.Finsertr(root,data);
-            return this;
-        }
         this.root = new Node(data);
-        this.size = 1;
+        this.size++;
+        this.depth++;
         return this;
     }
 
-    isOptimal(){//make sure max depth - min depth <= 1. 
+    isBalanced(){//make sure 2^(depth-1) < size. Tree can be further balanced if not.
+        return ((2**(this.depth-1))<this.size);
+    }
+
+    insert(data){//maintains balance
 
     }
 
-    insert(data){//maintains optimality
-
-    }
-
-    Finsert(value){//fast insert. separates arrays into individual elements before inserting. does not ensure optimality
+    Finsert(value){//fast insert. does not ensure balance
         check(value)
-        if(this.root==null)
-            this.init(value)
-        try{this.Finsertr(this.root,value)}
-        catch{console.log("error in Finsert");}
+        if(this.root==null){
+            this.root = new Node(value);
+            this.depth = 1;
+        }else
+            this.Finsertr(this.root,value,1);
     }
 
-    Finsertr(node,value){//recursive function for fast insert
+    Finsertr(node,value,depth){//recursive function for fast insert.
         if(node.data == value)//buckets functionality would go here
             return;
+        if(node.data > value)
+            this.Finsert2(node.left,value,depth)        
+        if(node.data < value)
+            this.Finsert2(node.right,value,depth)
+    }
 
-        if(node.data > value){
-            if(node.left == null){
-                this.size++;
-                node.left = new Node(value);
-                return;
-            }
-            this.Finsertr(node.left,value);
-            return;
-        }
-           
-        if(node.data < value){
-            if(node.right == null){
-                this.size++;
-                node.right = new Node(value);
-                return;
-            }
-            this.Finsertr(node.right,value);
-            return;
-        }
-        //code should not get here
-        throw  "Finsertr could not compare data";
+    Finsert2(childNode,value,depth){
+        if(childNode == null){
+            childNode = new Node(value);
+            this.size++;
+            if(depth==this.depth)
+                this.depth++;
+        }else
+            this.Finsertr(childNode,value,depth+1);
+        return;
     }
 
     find(data){//returns node corresponding to given data
@@ -104,8 +87,6 @@ export default class BST{
             return this.findr(node.left,data);
         if(node.data == data)
             return node;
-        //code should not get here
-        throw "findr could not compare data";
     }
 
     remove(data){
@@ -118,31 +99,25 @@ export default class BST{
             return null;
         if(node.data < data)
             node.right = this.remover(node.right,data);
-        if(node.data > data)
+        else if(node.data > data)
             node.left = this.remover(node.left,data);
-        //else node.data == data -> remove node
-        this.size--;
-        if(node.isLeaf())
-            return null;
-        if(node.left==null)
-            return node.right;
-        if(node.right==null)
-            return node.left;
-        else{
-            this.size++;
-            //case where both left and right are filled nodes. 
-            //replace node with leftmost child of right subtree or rightmost child of left subtree 
-            let ldepth = this.depthr(node.left);
-            let rdepth = this.depthl(node.right);
-            if(ldepth > rdepth){//replace node with rightmost child on left subtree
-                node.data = this.maxVal(node.left);
-                node.left = this.remover(node.left,node.data);
-            }else{
+        else{ //node.data == data -> remove node
+            this.size--;
+            if(node.isLeaf())
+                return null;
+            if(node.left==null)
+                return node.right;
+            if(node.right==null)
+                return node.left;
+            else{
+                this.size++;//increase size since remover will be called again
+                //case where current node must not only be removed but replaced.
+                //replace deleted node with leftmost child of right subtree. 
+                //Checking if rightmost child of left subtree should be replaced instead is probably not worth the computation.
                 node.data = this.minVal(node.right);
                 node.right = this.remover(node.right,node.data);
-            }
-        }
-        return node; 
+        }   }
+        return node;//regular case where node is not removed.
     }
 
     removeL(node){// Logic helper function for remove
@@ -173,8 +148,15 @@ export default class BST{
         return this.depthr(node.right)+1;
     }
 
-    computedepth(node){//returns the depth of tree below [node]
-
+    maxDepth(node){//computes the maximum depth of subtree. O(N) time
+        if (node == null)
+            return 0;
+        // compute the depth of each subtree
+        let lDepth = maxDepth(node.left);
+        let rDepth = maxDepth(node.right);
+        if (lDepth > rDepth)// use the larger one
+            return (lDepth + 1);
+        return (rDepth + 1);
     }
 
 
